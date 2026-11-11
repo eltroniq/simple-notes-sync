@@ -267,6 +267,8 @@ private fun NoteListSection(viewModel: SettingsViewModel) {
 @Composable
 private fun EditorSection(viewModel: SettingsViewModel, defaultNoteColor: String?, onDefaultColorClick: () -> Unit) {
     val autosaveEnabled by viewModel.autosaveEnabled.collectAsState()
+    val editorHideTitle by viewModel.editorHideTitle.collectAsState()
+    val editorCompactLayout by viewModel.editorCompactLayout.collectAsState()
     val defaultStartInPreviewMode by viewModel.defaultStartInPreviewMode.collectAsState()
     val checklistStartInReadMode by viewModel.checklistStartInReadMode.collectAsState()
     val newNoteFocusContent by viewModel.newNoteFocusContent.collectAsState()
@@ -283,6 +285,22 @@ private fun EditorSection(viewModel: SettingsViewModel, defaultNoteColor: String
         )
 
         SettingsHint(text = stringResource(R.string.autosave_info))
+
+        SettingsSwitch(
+            title = stringResource(R.string.editor_hide_title_toggle),
+            subtitle = stringResource(R.string.editor_hide_title_description),
+            checked = editorHideTitle,
+            onCheckedChange = { viewModel.setEditorHideTitle(it) },
+            icon = Icons.Default.EditNote
+        )
+
+        SettingsSwitch(
+            title = stringResource(R.string.editor_compact_layout_toggle),
+            subtitle = stringResource(R.string.editor_compact_layout_description),
+            checked = editorCompactLayout,
+            onCheckedChange = { viewModel.setEditorCompactLayout(it) },
+            icon = Icons.Outlined.GridView
+        )
 
         SettingsSwitch(
             title = stringResource(R.string.editor_default_preview_mode_toggle),
