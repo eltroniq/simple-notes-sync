@@ -664,7 +664,7 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                 titleFocusRequester.requestFocus()
                 keyboardController?.show()
             }
-            uiState.isNewNote && (uiState.noteType == NoteType.TEXT || hideTitle) -> {
+            uiState.isNewNote && uiState.noteType == NoteType.TEXT -> {
                 // 🆕 v2.11.0: user preference — start in content field
                 contentFocusRequester.requestFocus()
                 keyboardController?.show()
@@ -2074,7 +2074,7 @@ internal fun ChecklistEditor(
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(vertical = 8.dp),
+            contentPadding = PaddingValues(vertical = if (compactLayout) 0.dp else 8.dp),
             verticalArrangement = Arrangement.spacedBy(if (compactLayout) 0.dp else 2.dp),
             // IMPL_29f F2: Während Drag: User-Scroll deaktivieren.
             // Verhindert Gesture-Konkurrenz zwischen LazyColumn-Scroll und Drag-Gesture (RC-2).
