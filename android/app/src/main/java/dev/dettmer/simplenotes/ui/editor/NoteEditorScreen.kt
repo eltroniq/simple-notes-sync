@@ -1143,7 +1143,9 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                         )
                     } else {
                         androidx.compose.material3.OutlinedTextFieldDefaults.colors()
-                    }
+                    },
+                    contentPadding = if (compactLayout) PaddingValues(0.dp) else
+                        androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding()
                 )
 
                 if (!compactLayout && !hideTitle) Spacer(modifier = Modifier.height(16.dp))
@@ -1574,6 +1576,8 @@ private fun TextNoteContent(
         } else {
             androidx.compose.material3.OutlinedTextFieldDefaults.colors()
         },
+        contentPadding = if (compactLayout) PaddingValues(0.dp) else
+            androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding(),
         // 🆕 v1.8.2 (IMPL_07): Externer ScrollState für programmatisches Auto-Scroll
         scrollState = scrollState,
         outputTransformation = outputTransformation,
