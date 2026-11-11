@@ -96,6 +96,8 @@ class NoteEditorViewModel(application: Application, private val savedStateHandle
                 Constants.KEY_NEW_NOTE_FOCUS_CONTENT,
                 Constants.DEFAULT_NEW_NOTE_FOCUS_CONTENT
             ),
+            hideTitle = prefs.getBoolean(Constants.KEY_EDITOR_HIDE_TITLE, Constants.DEFAULT_EDITOR_HIDE_TITLE),
+            compactLayout = prefs.getBoolean(Constants.KEY_EDITOR_COMPACT_LAYOUT, Constants.DEFAULT_EDITOR_COMPACT_LAYOUT),
             // 🆕 (#126-Nachgang): Wortzähler-Sichtbarkeit aus den Einstellungen
             wordCounterVisibility = prefs
                 .getString(Constants.KEY_WORD_COUNTER_VISIBILITY, Constants.DEFAULT_WORD_COUNTER_VISIBILITY)
@@ -1773,6 +1775,8 @@ data class NoteEditorUiState(
     val defaultStartInPreviewMode: Boolean = false,
     val checklistStartInReadMode: Boolean = false, // 🆕 Issue #156
     val newNoteFocusContent: Boolean = false, // 🆕 v2.11.0
+    val hideTitle: Boolean = false,
+    val compactLayout: Boolean = false,
     // 🆕 (#126-Nachgang): aus / immer / nur im Lesemodus
     val wordCounterVisibility: WordCounterVisibility = WordCounterVisibility.ALWAYS,
     val isArchived: Boolean = false, // 🆕 v2.11.0 (Archive)
