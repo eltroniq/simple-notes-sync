@@ -143,6 +143,10 @@ object Constants {
     // 🆕 v1.9.0: Autosave with debounce
     const val KEY_AUTOSAVE_ENABLED = "autosave_enabled"
     const val DEFAULT_AUTOSAVE_ENABLED = true
+    const val KEY_EDITOR_HIDE_TITLE = "editor_hide_title"
+    const val DEFAULT_EDITOR_HIDE_TITLE = false
+    const val KEY_EDITOR_COMPACT_LAYOUT = "editor_compact_layout"
+    const val DEFAULT_EDITOR_COMPACT_LAYOUT = false
 
     // 🆕 v2.8.0: Default open mode for existing text notes
     // 🔄 v2.12.0: Default auf true (Vorschau) — Beta-Feedback: Lesen ist der häufigere Einstieg
