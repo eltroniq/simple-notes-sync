@@ -517,6 +517,8 @@ private suspend fun traceCheckPlacement(listState: LazyListState, trace: CheckTr
 @Composable
 fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
+    val hideTitle = uiState.hideTitle
+    val compactLayout = uiState.compactLayout
     val checklistItems by viewModel.checklistItems.collectAsState()
     // 🆕 (#126-Nachgang): Anzeigemodus der Statistik-Pille, notizübergreifend gemerkt.
     val noteStatsMode by viewModel.noteStatsMode.collectAsState()
@@ -561,6 +563,8 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
     var showOverflowMenu by remember { mutableStateOf(false) } // 🆕 v1.10.0-Papa
     var showColorPicker by remember { mutableStateOf(false) } // 🆕 v2.5.0
     var showConvertDialog by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+    var renameTitle by remember { mutableStateOf("") }
     var focusNewItemId by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -655,12 +659,12 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
     LaunchedEffect(uiState.isNewNote) {
         delay(LAYOUT_DELAY_MS) // Wait for layout
         when {
-            uiState.isNewNote && !uiState.newNoteFocusContent -> {
+            uiState.isNewNote && !uiState.newNoteFocusContent && !hideTitle -> {
                 // New note (default): focus title
                 titleFocusRequester.requestFocus()
                 keyboardController?.show()
             }
-            uiState.isNewNote && uiState.noteType == NoteType.TEXT -> {
+            uiState.isNewNote && (uiState.noteType == NoteType.TEXT || hideTitle) -> {
                 // 🆕 v2.11.0: user preference — start in content field
                 contentFocusRequester.requestFocus()
                 keyboardController?.show()
@@ -845,6 +849,17 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                             shadowElevation = 6.dp, // 🆕 v1.10.0-P2
                             tonalElevation = 2.dp // 🆕 v1.10.0-P2
                         ) {
+                            if (hideTitle) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.action_rename)) },
+                                    leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        renameTitle = uiState.title
+                                        showRenameDialog = true
+                                    }
+                                )
+                            }
                             // v2.0.1: Undo/Redo in overflow only for compact displays (Issue #48)
                             if (isCompactToolbar) {
                                 DropdownMenuItem(
@@ -1065,7 +1080,7 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                     .wrapContentWidth(align = Alignment.CenterHorizontally) // 🆕 v1.10.0-P2: Center on tablets
                     .widthIn(max = 720.dp) // 🆕 v1.10.0-P2: Constrain width for readability
                     .fillMaxWidth() // 🆕 v1.10.0-P2: Fill up to constrained width
-                    .padding(16.dp)
+                    .padding(if (compactLayout) 0.dp else 16.dp)
             ) {
                 // 🆕 v2.16.0: Konflikt-Banner über allem anderen — die Entscheidung kommt vor
                 // dem Weiterschreiben, sonst läuft der nächste Upload wieder in dasselbe 412.
@@ -1088,7 +1103,7 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                 }
 
                 // Title Input (for both types)
-                OutlinedTextField(
+                if (!hideTitle) OutlinedTextField(
                     value = uiState.title,
                     onValueChange = { viewModel.updateTitle(it) },
                     modifier = Modifier
@@ -1120,10 +1135,18 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                             }
                         }
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = if (compactLayout) RoundedCornerShape(0.dp) else RoundedCornerShape(16.dp),
+                    colors = if (compactLayout) {
+                        androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
+                        )
+                    } else {
+                        androidx.compose.material3.OutlinedTextFieldDefaults.colors()
+                    }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                if (!compactLayout && !hideTitle) Spacer(modifier = Modifier.height(16.dp))
 
                 when (uiState.noteType) {
                     NoteType.TEXT -> {
@@ -1176,6 +1199,8 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                                         scope.launch { attachAndInsertImages(viewModel, textFieldState, uris) }
                                     },
                                     onFocusChanged = { isContentFocused = it },
+                                    hideContentLabel = hideTitle && compactLayout,
+                                    compactLayout = compactLayout,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }
@@ -1255,6 +1280,7 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                             onFocusHandled = { focusNewItemId = null },
                             onSortClick = { showChecklistSortDialog = true }, // 🔀 v1.8.0
                             readOnly = isPreviewMode, // 🆕 Issue #156
+                            compactLayout = compactLayout,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
@@ -1263,6 +1289,32 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                 }
             }
         }
+    }
+
+    if (showRenameDialog) {
+        AlertDialog(
+            onDismissRequest = { showRenameDialog = false },
+            title = { Text(stringResource(R.string.editor_rename_title)) },
+            text = {
+                OutlinedTextField(
+                    value = renameTitle,
+                    onValueChange = { renameTitle = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.title)) }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.updateTitle(renameTitle)
+                    showRenameDialog = false
+                }) { Text(stringResource(R.string.save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRenameDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 
     // 🔀 v1.8.0: Checklist Sort Dialog
@@ -1432,7 +1484,9 @@ private fun TextNoteContent(
     outputTransformation: MarkdownOutputTransformation,
     onPasteImages: (List<Uri>) -> Unit, // 🆕 v2.12.0
     modifier: Modifier = Modifier,
-    onFocusChanged: (Boolean) -> Unit = {}
+    onFocusChanged: (Boolean) -> Unit = {},
+    hideContentLabel: Boolean = false,
+    compactLayout: Boolean = false
 ) {
     // 🆕 v1.8.2 (IMPL_07): Migration zu TextFieldState-API für scrollState-Unterstützung
     // v1.9.0 (F07): TextFieldState now provided from parent for toolbar access
@@ -1506,12 +1560,20 @@ private fun TextNoteContent(
                     }
                 }
             },
-        label = { Text(stringResource(R.string.content)) },
+        label = if (hideContentLabel) null else { { Text(stringResource(R.string.content)) } },
         // 🆕 v1.8.2: Auto-Großschreibung für Satzanfänge im Inhalt
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Sentences
         ),
-        shape = RoundedCornerShape(16.dp),
+        shape = if (compactLayout) RoundedCornerShape(0.dp) else RoundedCornerShape(16.dp),
+        colors = if (compactLayout) {
+            androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent
+            )
+        } else {
+            androidx.compose.material3.OutlinedTextFieldDefaults.colors()
+        },
         // 🆕 v1.8.2 (IMPL_07): Externer ScrollState für programmatisches Auto-Scroll
         scrollState = scrollState,
         outputTransformation = outputTransformation,
@@ -1801,7 +1863,8 @@ internal fun ChecklistEditor(
     onFocusHandled: () -> Unit,
     onSortClick: () -> Unit, // 🔀 v1.8.0
     modifier: Modifier = Modifier,
-    readOnly: Boolean = false // 🆕 Issue #156: Lesemodus, nur Abhaken
+    readOnly: Boolean = false, // 🆕 Issue #156: Lesemodus, nur Abhaken
+    compactLayout: Boolean = false
 ) {
     // IMPL_29q Q1: LazyLayoutCacheWindow ersetzt beyondBoundsItemCount (entfernt in Compose 1.10+).
     // Hält 0.55 × Viewport auf jeder Seite composiert → 865px Buffer (3 große Items à 271px).
@@ -2012,7 +2075,7 @@ internal fun ChecklistEditor(
             state = listState,
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compactLayout) 0.dp else 2.dp),
             // IMPL_29f F2: Während Drag: User-Scroll deaktivieren.
             // Verhindert Gesture-Konkurrenz zwischen LazyColumn-Scroll und Drag-Gesture (RC-2).
             // Scrollen erfolgt ausschließlich über programmatisches Auto-Scroll.
