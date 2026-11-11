@@ -458,6 +458,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         prefs.getBoolean(Constants.KEY_AUTOSAVE_ENABLED, Constants.DEFAULT_AUTOSAVE_ENABLED)
     )
     val autosaveEnabled: StateFlow<Boolean> = _autosaveEnabled.asStateFlow()
+    private val _editorHideTitle = MutableStateFlow(prefs.getBoolean(Constants.KEY_EDITOR_HIDE_TITLE, Constants.DEFAULT_EDITOR_HIDE_TITLE))
+    val editorHideTitle: StateFlow<Boolean> = _editorHideTitle.asStateFlow()
+    private val _editorCompactLayout = MutableStateFlow(prefs.getBoolean(Constants.KEY_EDITOR_COMPACT_LAYOUT, Constants.DEFAULT_EDITOR_COMPACT_LAYOUT))
+    val editorCompactLayout: StateFlow<Boolean> = _editorCompactLayout.asStateFlow()
 
     // 🆕 v2.8.0: Default open mode for existing text notes
     private val _defaultStartInPreviewMode = MutableStateFlow(
@@ -675,6 +679,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun setAutosaveEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(Constants.KEY_AUTOSAVE_ENABLED, enabled) }
         _autosaveEnabled.value = enabled
+    }
+
+    fun setEditorHideTitle(enabled: Boolean) {
+        prefs.edit { putBoolean(Constants.KEY_EDITOR_HIDE_TITLE, enabled) }
+        _editorHideTitle.value = enabled
+    }
+
+    fun setEditorCompactLayout(enabled: Boolean) {
+        prefs.edit { putBoolean(Constants.KEY_EDITOR_COMPACT_LAYOUT, enabled) }
+        _editorCompactLayout.value = enabled
     }
 
     /**
@@ -1520,6 +1534,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             prefs.getString(Constants.KEY_CUSTOM_APP_TITLE, Constants.DEFAULT_CUSTOM_APP_TITLE)
                 ?: Constants.DEFAULT_CUSTOM_APP_TITLE
         _autosaveEnabled.value = prefs.getBoolean(Constants.KEY_AUTOSAVE_ENABLED, Constants.DEFAULT_AUTOSAVE_ENABLED)
+        _editorHideTitle.value = prefs.getBoolean(Constants.KEY_EDITOR_HIDE_TITLE, Constants.DEFAULT_EDITOR_HIDE_TITLE)
+        _editorCompactLayout.value = prefs.getBoolean(Constants.KEY_EDITOR_COMPACT_LAYOUT, Constants.DEFAULT_EDITOR_COMPACT_LAYOUT)
         _notificationsEnabled.value =
             prefs.getBoolean(Constants.KEY_NOTIFICATIONS_ENABLED, Constants.DEFAULT_NOTIFICATIONS_ENABLED)
         _notificationsErrorsOnly.value =
