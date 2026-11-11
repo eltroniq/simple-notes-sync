@@ -1576,6 +1576,8 @@ private fun TextNoteContent(
         },
         // 🆕 v1.8.2 (IMPL_07): Externer ScrollState für programmatisches Auto-Scroll
         scrollState = scrollState,
+        contentPadding = if (compactLayout) PaddingValues(0.dp) else
+            androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding(),
         outputTransformation = outputTransformation,
         onTextLayout = { getResult -> textLayoutRef.value = getResult() }
     )
