@@ -1080,7 +1080,10 @@ fun NoteEditorScreen(viewModel: NoteEditorViewModel, onNavigateBack: () -> Unit)
                     .wrapContentWidth(align = Alignment.CenterHorizontally) // 🆕 v1.10.0-P2: Center on tablets
                     .widthIn(max = 720.dp) // 🆕 v1.10.0-P2: Constrain width for readability
                     .fillMaxWidth() // 🆕 v1.10.0-P2: Fill up to constrained width
-                    .padding(if (compactLayout) 0.dp else 16.dp)
+                    .padding(
+                        horizontal = if (compactLayout && !isPreviewMode) 16.dp else if (compactLayout) 0.dp else 16.dp,
+                        vertical = if (compactLayout) 0.dp else 16.dp
+                    )
             ) {
                 // 🆕 v2.16.0: Konflikt-Banner über allem anderen — die Entscheidung kommt vor
                 // dem Weiterschreiben, sonst läuft der nächste Upload wieder in dasselbe 412.
